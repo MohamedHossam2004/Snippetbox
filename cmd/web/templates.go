@@ -3,13 +3,26 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
+	"github.com/MohamedHossam2004/Snippetbox.git/pkg/forms"
 	"github.com/MohamedHossam2004/Snippetbox.git/pkg/models"
 )
 
 type templateData struct {
-	Snippet  *models.Snippet
-	Snippets []*models.Snippet
+	CurrentYear int
+	Flash       string
+	Form        *forms.Form
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
@@ -31,7 +44,11 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 		name := filepath.Base(page)
 
 		// Parse the page template file in to a template set.
-		ts, err := template.ParseFiles(page)
+		// The template.FuncMap must be registered with the template set before you
+		// call the ParseFiles() method. This means we have to use template.New() to
+		// create an empty template set, use the Funcs() method to register the
+		// template.FuncMap, and then parse the file as normal.
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return nil, err
 		}
